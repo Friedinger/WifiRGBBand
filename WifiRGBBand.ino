@@ -43,7 +43,7 @@ const char html[] = R"(
   </style>
 </head>
 <body>
-  <h1>WifiRGBBand</h1>
+  <h1><a href="/">WifiRGBBand</a></h1>
   <a href="/led/off">Off</a><br><br>
   <h3>Static Colour: </h3>
   <form action="/led/static">
