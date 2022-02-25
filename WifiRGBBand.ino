@@ -1,10 +1,10 @@
 #include <WiFi.h>
 #include <Adafruit_NeoPixel.h>
+#include "config.h" //Include configuration file with "#define" of "ConfigSsid", "ConfigPassword" and "ConfigPin"
 
-#define PIN 13
-
-const char* ssid     = "";
-const char* password = "";
+const char* ssid     = ConfigSsid ;
+const char* password = ConfigPassword ;
+int pin = ConfigPin;
 
 int light = 0;
 int lightpre = 0;
@@ -14,16 +14,47 @@ String webparameter;
 String webparametervalue;
 
 const char html[] = R"(
-<a href="/led/off">Off</a><br>
-<form action="/led/static">
-  <label for="colour">Static Colour: </label>
-  <input type="color" id="colour" name="colour" />
-  <input type="submit" value="Submit" />
-</form><br>
-<a href="/led/rainbow">Rainbow</a><br>
-<a href="/led/rainbowcycle">RainbowCycle</a><br>
-<a href="/led/colourwipe">ColourWipe</a><br>
-</form>
+<head>
+  <title>WifiRGBBand</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      color: #ffffff;
+      background: #000000;
+      font-family: Verdana, sans-serif;
+    }
+    input[type=submit] {
+       font-size: 16px;
+      background: #000000;
+      border: none;
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    input[type=color] {
+      border: none;
+      background: #000000;
+      height: 22px;
+    }
+    a {
+      color: white;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>WifiRGBBand</h1>
+  <a href="/led/off">Off</a><br><br>
+  <h3>Static Colour: </h3>
+  <form action="/led/static">
+    <input type="color" id="colour" name="colour" value="#ffffff">
+    <input type="submit" value="Submit">
+  </form><br>
+  <h3>Effekts: </h3>
+  <a href="/led/rainbow">Rainbow</a><br>
+  <a href="/led/rainbowcycle">RainbowCycle</a><br>
+  <a href="/led/colourwipe">ColourWipe</a><br>
+</body>
 )";
 
 // Parameter 1 = number of pixels in strip
@@ -34,7 +65,7 @@ const char html[] = R"(
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(100, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(100, pin, NEO_GRB + NEO_KHZ800);
 
 WiFiServer server(80);
 
@@ -111,13 +142,10 @@ void loop() {
     if (webparameter == "colour" && webparametervalue) {
       String colour1 = webparametervalue;
       colour1.remove(0, 3);
-      Serial.println("Colour1: " + colour1);
-      uint32_t colour2 = webparametervalue.toInt();
-      Serial.println("Colour2: " + colour2);
-      byte colour = 0xFF0000;
-      //byte colour3 = colour1.toByte();
-      Serial.println("Colour: " + colour);
-      strip.fill(colour);
+      uint32_t colour2 = hstol(colour1);
+      strip.fill(colour2);
+      strip.show();
+      Serial.println(colour2);  
       weblink = "";
     }
   }
@@ -134,78 +162,12 @@ void loop() {
   }
 }
 
-void switchlight() {
-  if (light != lightpre) {
-    lightpre = light;
-    switch (light) {
-      case 0:
-        strip.clear();
-        strip.show();
-        break;
-      case 1:
-        strip.fill(strip.Color(255, 255, 255)); //white
-        strip.show();
-        break;
-      case 11:
-        rainbow(20);
-        lightpre = -1;
-        break;
-      case 12:
-        rainbowCycle(20);
-        lightpre = -1;
-        break;
-      case 13:
-        colorWipe(strip.Color(255, 0, 0), 50); //red
-        colorWipe(strip.Color(0, 255, 0), 50); //green
-        colorWipe(strip.Color(0, 0, 255), 50); //blue
-        lightpre = -1;
-        break;
-      case 21:
-        strip.fill(strip.Color(255, 0, 0)); //red
-        strip.show();
-        break;
-      case 22:
-        strip.fill(strip.Color(0, 255, 0)); //green
-        strip.show();
-        break;
-      case 23:
-        strip.fill(strip.Color(0, 0, 255)); //blue
-        strip.show();
-        break;
-      case 24:
-        strip.fill(strip.Color(255, 255, 0)); //yellow
-        strip.show();
-        break;
-      case 25:
-        strip.fill(strip.Color(0, 255, 255)); //cyan
-        strip.show();
-        break;
-      case 26:
-        strip.fill(strip.Color(160, 0, 255)); //purple
-        strip.show();
-        break;
-      case 27:
-        strip.fill(strip.Color(255, 0, 255)); //magenta
-        strip.show();
-        break;
-    }
-  }
+uint32_t hstol(String recv){
+  char c[recv.length() + 1];
+  recv.toCharArray(c, recv.length() + 1);
+  return strtol(c, NULL, 16);
 }
 
-// Some example procedures showing how to display to the pixels:
-//colorWipe(strip.Color(255, 0, 0), 50); // Red
-//colorWipe(strip.Color(0, 255, 0), 50); // Green
-//colorWipe(strip.Color(0, 0, 255), 50); // Blue
-//colorWipe(strip.Color(0, 0, 0, 255), 50); // White RGBW
-// Send a theater pixel chase in...
-//theaterChase(strip.Color(127, 127, 127), 50); // White
-//theaterChase(strip.Color(127, 0, 0), 50); // Red
-//theaterChase(strip.Color(0, 0, 127), 50); // Blue
-
-//rainbow(20);
-//theaterChaseRainbow(50);
-
-// Fill the dots one after the other with a color
 void colorWipe(uint32_t c, uint8_t wait) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
@@ -216,7 +178,6 @@ void colorWipe(uint32_t c, uint8_t wait) {
 
 void rainbow(uint8_t wait) {
   uint16_t i, j;
-
   for(j=0; j<256; j++) {
     for(i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel((i+j) & 255));
@@ -226,11 +187,9 @@ void rainbow(uint8_t wait) {
   }
 }
 
-// Slightly different, this makes the rainbow equally distributed throughout
 void rainbowCycle(uint8_t wait) {
   uint16_t i, j;
-
-  for(j=0; j<256; j++) { // 1 cycles of all colors on wheel
+  for(j=0; j<256; j++) {
     for(i=0; i< strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
     }
@@ -239,44 +198,36 @@ void rainbowCycle(uint8_t wait) {
   }
 }
 
-//Theatre-style crawling lights.
 void theaterChase(uint32_t c, uint8_t wait) {
-  for (int j=0; j<10; j++) {  //do 10 cycles of chasing
+  for (int j=0; j<10; j++) {
     for (int q=0; q < 3; q++) {
       for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, c);    //turn every third pixel on
+        strip.setPixelColor(i+q, c);
       }
       strip.show();
-
       delay(wait);
-
       for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, 0);        //turn every third pixel off
+        strip.setPixelColor(i+q, 0);
       }
     }
   }
 }
 
-//Theatre-style crawling lights with rainbow effect
 void theaterChaseRainbow(uint8_t wait) {
-  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+  for (int j=0; j < 256; j++) {
     for (int q=0; q < 3; q++) {
       for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
+        strip.setPixelColor(i+q, Wheel( (i+j) % 255));
       }
       strip.show();
-
       delay(wait);
-
       for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-        strip.setPixelColor(i+q, 0);        //turn every third pixel off
+        strip.setPixelColor(i+q, 0);
       }
     }
   }
 }
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
 uint32_t Wheel(byte WheelPos) {
   WheelPos = 255 - WheelPos;
   if(WheelPos < 85) {
