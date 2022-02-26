@@ -50,7 +50,7 @@ const char html[] = R"(
     <input type="color" id="colour" name="colour" value="#ffffff">
     <input type="submit" value="Submit">
   </form><br>
-  <h3>Effekts: </h3>
+  <h3>Effects: </h3>
   <a href="/led/rainbow">Rainbow</a><br>
   <a href="/led/rainbowcycle">RainbowCycle</a><br>
   <a href="/led/colourwipe">ColourWipe</a><br>
@@ -83,8 +83,6 @@ void setup() {
   strip.show();
 }
 
-int value = 0;
-
 void loop() {
   WiFiClient client = server.available();
   if (client) {
@@ -108,7 +106,7 @@ void loop() {
         } else if (c != '\r') {
           currentLine += c;
         }
-        if (currentLine.startsWith("GET /") && currentLine.endsWith(" HTTP/1.1")) {
+        if (currentLine.startsWith("GET /") && currentLine.endsWith(" HTTP/1.1") && !currentLine.startsWith("GET /favicon.ico")) {
           webrequest = currentLine;
           webrequest.remove(0, 4);
           webrequest.remove((webrequest.length() - 9), 9);
@@ -150,7 +148,7 @@ void loop() {
   if (weblink == "/led/colourwipe") {
     colorWipe(strip.Color(255, 0, 0), 50);
     colorWipe(strip.Color(0, 255, 0), 50);
-    colorWipe(strip.Color(0, 0, 255), 50);  
+    colorWipe(strip.Color(0, 0, 255), 50);
   }
 }
 
