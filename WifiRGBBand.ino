@@ -1,9 +1,9 @@
 #include <WiFi.h>
 #include <Adafruit_NeoPixel.h>
-#include "config.h" //Include configuration file with "#define" of "ConfigSsid", "ConfigPassword" and "ConfigPin"
+#include "config.h" //Include configuration file: Rename "sampleconfig.h" to "config.h" and ajust sample values
 
-const char* ssid     = ConfigSsid ;
-const char* password = ConfigPassword ;
+const char* ssid     = ConfigSsid;
+const char* password = ConfigPassword;
 int pin = ConfigPin;
 
 int light = 0;
